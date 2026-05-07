@@ -10,9 +10,23 @@ const statusEmoji: Record<string, string> = { happy: "😄", hungry: "😵", tir
 
 export default function PetCard({ pet, aiEnabled, onChanged }: { pet: any; aiEnabled: boolean; onChanged: () => void }) {
   const [lastResult, setLastResult] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
 
   function done(result?: any) {
     setLastResult(result);
+    onChanged();
+  }
+
+  async function deletePet() {
+    if (!window.confirm(`确定要删除 ${pet.name} 吗？互动日志也会一起删除。`)) return;
+    setDeleting(true);
+    const response = await fetch(`/api/pets/${pet.id}`, { method: "DELETE" });
+    const data = await response.json();
+    setDeleting(false);
+    if (!data.ok) {
+      setLastResult({ error: data.error || "删除宠物失败" });
+      return;
+    }
     onChanged();
   }
 
@@ -27,6 +41,14 @@ export default function PetCard({ pet, aiEnabled, onChanged }: { pet: any; aiEna
         <p className="text-sm font-semibold text-ink/60">
           Lv.{pet.level} · {pet.exp} exp · {pet.coins} 金币 · {pet.status}
         </p>
+        <button
+          className="mt-4 rounded-lg px-3 py-1.5 text-sm font-semibold text-red-600 ring-1 ring-red-100 transition hover:bg-red-50 disabled:opacity-50"
+          type="button"
+          onClick={deletePet}
+          disabled={deleting}
+        >
+          {deleting ? "删除中..." : "删除宠物"}
+        </button>
       </div>
       <div className="space-y-5">
         <div className="grid gap-3 md:grid-cols-2">

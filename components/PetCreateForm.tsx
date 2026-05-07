@@ -1,15 +1,31 @@
 "use client";
 
+import { useState } from "react";
+
 export default function PetCreateForm({ onCreated }: { onCreated: () => void }) {
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setMessage("");
+    setError("");
+    setLoading(true);
     const form = new FormData(event.currentTarget);
-    await fetch("/api/pets", {
+    const response = await fetch("/api/pets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: form.get("name"), type: form.get("type") })
     });
+    const data = await response.json();
+    setLoading(false);
+    if (!data.ok) {
+      setError(data.error || "领养失败");
+      return;
+    }
     event.currentTarget.reset();
+    setMessage(`已经成功领养 ${data.data.pet.name}！`);
     onCreated();
   }
 
@@ -25,8 +41,12 @@ export default function PetCreateForm({ onCreated }: { onCreated: () => void }) 
           <option value="robot">🤖 robot</option>
           <option value="bird">🐦 bird</option>
         </select>
-        <button className="btn-primary">领养</button>
+        <button className="btn-primary" disabled={loading}>
+          {loading ? "领养中..." : "领养"}
+        </button>
       </div>
+      {message && <p className="mt-3 rounded-lg bg-mint/15 px-3 py-2 text-sm font-semibold text-ink">{message}</p>}
+      {error && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-600">{error}</p>}
     </form>
   );
 }

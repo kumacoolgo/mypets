@@ -73,10 +73,22 @@ export default function AiSettingsPage() {
         <input className="field" value={form.aiModel} onChange={(e) => update("aiModel", e.target.value)} placeholder="AI Model" />
         <input className="field" value={form.aiApiKey} onChange={(e) => update("aiApiKey", e.target.value)} placeholder={masked ? `API Key 已配置：${masked}` : "AI API Key"} />
         <div className="grid gap-3 md:grid-cols-3">
-          <input className="field" type="number" value={form.aiTimeoutSeconds} onChange={(e) => update("aiTimeoutSeconds", Number(e.target.value))} />
-          <input className="field" type="number" value={form.aiDailyLimitPerUser} onChange={(e) => update("aiDailyLimitPerUser", Number(e.target.value))} />
-          <input className="field" type="number" value={form.aiEventCooldownSeconds} onChange={(e) => update("aiEventCooldownSeconds", Number(e.target.value))} />
+          <label className="text-sm font-semibold text-ink/70">
+            请求超时（秒）
+            <input className="field mt-1" type="number" value={form.aiTimeoutSeconds} onChange={(e) => update("aiTimeoutSeconds", Number(e.target.value))} />
+          </label>
+          <label className="text-sm font-semibold text-ink/70">
+            每日调用上限
+            <input className="field mt-1" type="number" value={form.aiDailyLimitPerUser} onChange={(e) => update("aiDailyLimitPerUser", Number(e.target.value))} />
+          </label>
+          <label className="text-sm font-semibold text-ink/70">
+            AI 冷却时间（秒）
+            <input className="field mt-1" type="number" value={form.aiEventCooldownSeconds} onChange={(e) => update("aiEventCooldownSeconds", Number(e.target.value))} />
+          </label>
         </div>
+        <p className="rounded-lg bg-honey/15 px-3 py-2 text-sm text-ink/70">
+          AI 冷却时间在这里设置，字段名是“AI 冷却时间（秒）”。例如填 60 表示同一只宠物两次 AI 互动之间至少间隔 60 秒。
+        </p>
         <div className="flex gap-2">
           <button className="btn-primary" onClick={save}>保存</button>
           <button className="btn-soft" onClick={test}>测试连接</button>
