@@ -21,7 +21,7 @@ const ranges: Record<AiEventType, Record<keyof Omit<AiPetEvent, "title" | "story
     expGain: [5, 60],
     coinsGain: [0, 50],
     energyDelta: [-40, -5],
-    hungerDelta: [0, 25],
+    hungerDelta: [-25, 0],
     cleanlinessDelta: [-25, 5],
     moodDelta: [-10, 25]
   },
@@ -29,7 +29,7 @@ const ranges: Record<AiEventType, Record<keyof Omit<AiPetEvent, "title" | "story
     expGain: [5, 35],
     coinsGain: [0, 10],
     energyDelta: [-30, -5],
-    hungerDelta: [0, 20],
+    hungerDelta: [-20, 0],
     cleanlinessDelta: [-15, 5],
     moodDelta: [5, 30]
   },
@@ -37,7 +37,7 @@ const ranges: Record<AiEventType, Record<keyof Omit<AiPetEvent, "title" | "story
     expGain: [5, 40],
     coinsGain: [10, 80],
     energyDelta: [-45, -10],
-    hungerDelta: [5, 30],
+    hungerDelta: [-30, -5],
     cleanlinessDelta: [-30, 0],
     moodDelta: [-15, 15]
   },
@@ -70,7 +70,7 @@ export function buildAiPetPrompt(eventType: AiEventType, pet: Pet) {
         name: pet.name,
         type: pet.type,
         level: pet.level,
-        hunger: pet.hunger,
+        fullness: pet.hunger,
         mood: pet.mood,
         energy: pet.energy,
         cleanliness: pet.cleanliness,
@@ -100,10 +100,10 @@ export function buildAiPetPrompt(eventType: AiEventType, pet: Pet) {
 
 export function assertAiPreconditions(eventType: AiEventType, pet: Pet) {
   if (eventType === "ai-adventure" && pet.energy < 20) return "宠物太累了，先休息一下再探险吧";
-  if (eventType === "ai-adventure" && pet.hunger > 85) return "宠物太饿了，先喂点东西再探险吧";
+  if (eventType === "ai-adventure" && pet.hunger < 15) return "宠物太饿了，先喂点东西再探险吧";
   if (eventType === "ai-play" && pet.energy < 10) return "宠物太困了，现在玩不动啦";
   if (eventType === "ai-work" && pet.energy < 30) return "宠物体力不足，不能打工";
-  if (eventType === "ai-work" && pet.hunger > 80) return "宠物太饿了，不能打工";
+  if (eventType === "ai-work" && pet.hunger < 20) return "宠物太饿了，不能打工";
   return null;
 }
 
@@ -159,7 +159,7 @@ export function fallbackEvent(eventType: AiEventType): AiPetEvent {
       story: "AI 暂时没有回应，宠物在院子里发现了一片闪闪发光的叶子，开心地把它带了回来。",
       moodDelta: 8,
       energyDelta: -10,
-      hungerDelta: 5,
+      hungerDelta: -5,
       cleanlinessDelta: -3,
       expGain: 15,
       coinsGain: 5,
@@ -170,7 +170,7 @@ export function fallbackEvent(eventType: AiEventType): AiPetEvent {
       story: "宠物把纸箱当成城堡，钻进钻出玩得很开心，还在角落发现了一枚小硬币。",
       moodDelta: 14,
       energyDelta: -8,
-      hungerDelta: 4,
+      hungerDelta: -4,
       cleanlinessDelta: -2,
       expGain: 12,
       coinsGain: 2,
@@ -181,7 +181,7 @@ export function fallbackEvent(eventType: AiEventType): AiPetEvent {
       story: "宠物去点心店帮忙递菜单，虽然弄脏了一点，但认真工作换来了满满奖励。",
       moodDelta: 2,
       energyDelta: -18,
-      hungerDelta: 10,
+      hungerDelta: -10,
       cleanlinessDelta: -8,
       expGain: 18,
       coinsGain: 25,
@@ -192,7 +192,7 @@ export function fallbackEvent(eventType: AiEventType): AiPetEvent {
       story: "一阵风吹来彩色便签，宠物追着它转了一圈，今天的心情也变亮了一点。",
       moodDelta: 8,
       energyDelta: -4,
-      hungerDelta: 2,
+      hungerDelta: -2,
       cleanlinessDelta: 0,
       expGain: 8,
       coinsGain: 1,

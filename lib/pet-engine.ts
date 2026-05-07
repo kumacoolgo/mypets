@@ -12,11 +12,11 @@ export function expRequired(level: number) {
 }
 
 export function determineStatus(pet: Pick<PetStats, "hunger" | "mood" | "energy" | "cleanliness">) {
-  if (pet.mood <= 20 && pet.hunger >= 70) return "sick";
-  if (pet.hunger >= 80) return "hungry";
+  if (pet.mood <= 20 && pet.hunger <= 30) return "sick";
+  if (pet.hunger <= 20) return "hungry";
   if (pet.energy <= 20) return "tired";
   if (pet.cleanliness <= 20) return "dirty";
-  if (pet.mood >= 80 && pet.hunger <= 40) return "happy";
+  if (pet.mood >= 80 && pet.hunger >= 60) return "happy";
   return "normal";
 }
 
@@ -40,7 +40,7 @@ export function calculateDecay<T extends PetStats>(pet: T, now = new Date()) {
 
   const next = {
     ...pet,
-    hunger: clamp(pet.hunger + Math.floor(minutes / 10)),
+    hunger: clamp(pet.hunger - Math.floor(minutes / 10)),
     mood: clamp(pet.mood - Math.floor(minutes / 15)),
     energy: clamp(pet.energy - Math.floor(minutes / 20)),
     cleanliness: clamp(pet.cleanliness - Math.floor(minutes / 30)),
@@ -56,11 +56,11 @@ export function calculateDecay<T extends PetStats>(pet: T, now = new Date()) {
 export function applyPetAction<T extends PetStats>(pet: T, action: PetAction) {
   const decayed = calculateDecay(pet);
   const deltas = {
-    feed: { hunger: -25, mood: 5, energy: 0, cleanliness: 0, exp: 8, coins: 0 },
-    play: { hunger: 8, mood: 18, energy: -15, cleanliness: -4, exp: 14, coins: 0 },
-    sleep: { hunger: 10, mood: 4, energy: 28, cleanliness: 0, exp: 2, coins: 0 },
+    feed: { hunger: 25, mood: 5, energy: 0, cleanliness: 0, exp: 8, coins: 0 },
+    play: { hunger: -8, mood: 18, energy: -15, cleanliness: -4, exp: 14, coins: 0 },
+    sleep: { hunger: -10, mood: 4, energy: 28, cleanliness: 0, exp: 2, coins: 0 },
     bath: { hunger: 0, mood: 2, energy: -3, cleanliness: 30, exp: 8, coins: 0 },
-    work: { hunger: 16, mood: -4, energy: -24, cleanliness: -16, exp: 20, coins: 18 }
+    work: { hunger: -16, mood: -4, energy: -24, cleanliness: -16, exp: 20, coins: 18 }
   } satisfies Record<PetAction, { hunger: number; mood: number; energy: number; cleanliness: number; exp: number; coins: number }>;
 
   const delta = deltas[action];

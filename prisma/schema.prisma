@@ -21,6 +21,8 @@ model User {
   pets         Pet[]
   logs         InteractionLog[]
   aiLogs       AiEventLog[]
+  sentFriends  Friendship[]    @relation("FriendRequester")
+  gotFriends   Friendship[]    @relation("FriendAddressee")
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 }
@@ -91,4 +93,20 @@ model SystemSetting {
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Friendship {
+  id          String   @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      String   @default("pending")
+  requester   User     @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User     @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
+  @@index([status])
 }
