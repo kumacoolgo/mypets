@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import LogoutButton from "@/components/LogoutButton";
+import FriendDrawer from "@/components/FriendDrawer";
 
 export default async function AppHeader() {
   const user = await getCurrentUser();
@@ -21,7 +22,10 @@ export default async function AppHeader() {
             </Link>
           )}
           {user ? (
-            <LogoutButton />
+            <>
+              <FriendDrawer />
+              <LogoutButton />
+            </>
           ) : (
             <>
               <Link className="btn-soft px-3 py-1.5" href="/login">

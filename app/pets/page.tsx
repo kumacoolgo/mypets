@@ -4,14 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import PetCard from "@/components/PetCard";
 import PetCreateForm from "@/components/PetCreateForm";
-import FriendPanel from "@/components/FriendPanel";
 
 export default function PetsPage() {
   const router = useRouter();
   const [pets, setPets] = useState<any[]>([]);
-  const [friendships, setFriendships] = useState<any[]>([]);
-  const [friendPets, setFriendPets] = useState<any[]>([]);
-  const [currentUserId, setCurrentUserId] = useState("");
   const [aiEnabled, setAiEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,19 +15,13 @@ export default function PetsPage() {
   const autoCareKeys = useRef(new Set<string>());
 
   async function load() {
-    const [res, friendsRes] = await Promise.all([fetch("/api/pets"), fetch("/api/friends")]);
+    const res = await fetch("/api/pets");
     const data = await res.json();
-    const friendData = friendsRes.ok ? await friendsRes.json() : null;
     setLoading(false);
     if (res.status === 401) return router.push("/login");
     if (!data.ok) return setError(data.error);
     setPets(data.data.pets);
     setAiEnabled(data.data.aiSettings.enabled);
-    if (friendData?.ok) {
-      setCurrentUserId(friendData.data.currentUserId);
-      setFriendships(friendData.data.friendships);
-      setFriendPets(friendData.data.friendPets);
-    }
     triggerAutoCare(data.data.pets, data.data.aiSettings.enabled);
   }
 
@@ -76,11 +66,10 @@ export default function PetsPage() {
       )}
       {loading && <div className="pet-card p-6">加载中...</div>}
       {error && <div className="pet-card p-6 text-red-600">{error}</div>}
-      {!loading && <FriendPanel currentUserId={currentUserId} friendships={friendships} onChanged={load} />}
       {!loading && pets.length === 0 && <PetCreateForm onCreated={load} />}
       <div className="space-y-5">
         {pets.map((pet) => (
-          <PetCard key={pet.id} pet={pet} aiEnabled={aiEnabled} friendPets={friendPets} onChanged={load} />
+          <PetCard key={pet.id} pet={pet} aiEnabled={aiEnabled} onChanged={load} />
         ))}
       </div>
     </div>

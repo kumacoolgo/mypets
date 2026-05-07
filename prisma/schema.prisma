@@ -23,6 +23,7 @@ model User {
   aiLogs       AiEventLog[]
   sentFriends  Friendship[]    @relation("FriendRequester")
   gotFriends   Friendship[]    @relation("FriendAddressee")
+  friendMessages FriendMessage[]
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 }
@@ -104,9 +105,24 @@ model Friendship {
   addressee   User     @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  messages    FriendMessage[]
 
   @@unique([requesterId, addresseeId])
   @@index([requesterId])
   @@index([addresseeId])
   @@index([status])
+}
+
+model FriendMessage {
+  id           String     @id @default(cuid())
+  friendshipId String
+  senderId     String
+  content      String     @db.Text
+  friendship   Friendship @relation(fields: [friendshipId], references: [id], onDelete: Cascade)
+  sender       User       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@index([friendshipId])
+  @@index([senderId])
+  @@index([createdAt])
 }

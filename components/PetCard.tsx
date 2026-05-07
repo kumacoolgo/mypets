@@ -11,17 +11,14 @@ const statusEmoji: Record<string, string> = { happy: "😄", hungry: "😵", tir
 export default function PetCard({
   pet,
   aiEnabled,
-  friendPets,
   onChanged
 }: {
   pet: any;
   aiEnabled: boolean;
-  friendPets: any[];
   onChanged: () => void;
 }) {
   const [lastResult, setLastResult] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
-  const [targetPetId, setTargetPetId] = useState("");
 
   function done(result?: any) {
     setLastResult(result);
@@ -39,21 +36,6 @@ export default function PetCard({
       return;
     }
     onChanged();
-  }
-
-  async function visitFriend() {
-    if (!targetPetId) {
-      setLastResult({ error: "请选择一个好友宠物" });
-      return;
-    }
-    const response = await fetch(`/api/pets/${pet.id}/visit-friend`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ targetPetId })
-    });
-    const data = await response.json();
-    setLastResult(data.ok ? data.data.result : { error: data.error });
-    if (data.ok) onChanged();
   }
 
   return (
@@ -90,22 +72,6 @@ export default function PetCard({
           <PetStatusBar label="清洁" value={pet.cleanliness} tone="bg-sky-400" />
         </div>
         <PetActions petId={pet.id} aiEnabled={aiEnabled} onDone={done} />
-        <div className="rounded-lg bg-white/80 p-3">
-          <div className="mb-2 text-sm font-black">去好友家串门</div>
-          <div className="grid gap-2 md:grid-cols-[1fr_auto]">
-            <select className="field" value={targetPetId} onChange={(e) => setTargetPetId(e.target.value)}>
-              <option value="">选择好友宠物</option>
-              {friendPets.map((friendPet) => (
-                <option key={friendPet.id} value={friendPet.id}>
-                  {friendPet.name}（{friendPet.owner?.username}）
-                </option>
-              ))}
-            </select>
-            <button className="btn-soft" onClick={visitFriend} disabled={friendPets.length === 0}>
-              串门
-            </button>
-          </div>
-        </div>
         {lastResult && (
           <div className="rounded-lg bg-white p-3 text-sm">
             {lastResult.error ? (
