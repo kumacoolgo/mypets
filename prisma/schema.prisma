@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String          @id @default(cuid())
+  username     String          @unique
+  email        String?         @unique
+  passwordHash String
+  role         Role            @default(USER)
+  pets         Pet[]
+  logs         InteractionLog[]
+  aiLogs       AiEventLog[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model Pet {
+  id                String           @id @default(cuid())
+  ownerId           String
+  owner             User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name              String
+  type              String
+  level             Int              @default(1)
+  exp               Int              @default(0)
+  coins             Int              @default(0)
+  hunger            Int              @default(20)
+  mood              Int              @default(80)
+  energy            Int              @default(80)
+  cleanliness       Int              @default(80)
+  status            String           @default("normal")
+  lastStateUpdateAt DateTime         @default(now())
+  logs              InteractionLog[]
+  aiLogs            AiEventLog[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([ownerId])
+}
+
+model InteractionLog {
+  id        String   @id @default(cuid())
+  userId    String
+  petId     String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  action    String
+  result    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([petId])
+  @@index([createdAt])
+}
+
+model AiEventLog {
+  id         String   @id @default(cuid())
+  userId     String
+  petId      String
+  eventType  String
+  prompt     String   @db.Text
+  response   String   @db.Text
+  parsedJson String?  @db.Text
+  success    Boolean  @default(false)
+  error      String?  @db.Text
+  tokensUsed Int?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet  Pet  @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([petId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

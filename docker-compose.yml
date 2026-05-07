@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mypets
+      POSTGRES_PASSWORD: mypets_password
+      POSTGRES_DB: mypets
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mypets -d mypets"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://mypets:mypets_password@postgres:5432/mypets
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: change_me_please
+      ADMIN_EMAIL: admin@example.com
+      APP_API_KEY: change_me_api_key
+      SESSION_SECRET: change_me_session_secret_at_least_32_chars
+      ALLOW_REGISTER: "true"
+      NEXT_PUBLIC_APP_NAME: MyPets
+      DATA_DIR: /app/data
+      NODE_ENV: production
+      AI_ENABLED: "false"
+      AI_BASE_URL: https://api.openai.com/v1
+      AI_API_KEY: change_me_ai_api_key
+      AI_MODEL: gpt-4o-mini
+      AI_TIMEOUT_SECONDS: "30"
+      AI_DAILY_LIMIT_PER_USER: "20"
+      AI_EVENT_COOLDOWN_SECONDS: "60"
+    ports:
+      - "3000:3000"
+    volumes:
+      - app_data:/app/data
+
+volumes:
+  postgres_data:
+  app_data:
