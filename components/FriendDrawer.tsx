@@ -118,117 +118,134 @@ export default function FriendDrawer() {
   }
 
   return (
-    <>
+    <div className="relative">
       <button className="btn-soft px-3 py-1.5" type="button" onClick={() => setOpen(true)}>
         好友
       </button>
       {open && (
-        <div className="fixed inset-0 z-50">
-          <button className="absolute inset-0 bg-ink/30" type="button" aria-label="关闭好友面板" onClick={() => setOpen(false)} />
-          <aside className="absolute right-0 top-0 flex h-full w-full max-w-3xl flex-col bg-white shadow-2xl md:w-[720px]">
-            <div className="flex items-center justify-between border-b border-ink/10 px-5 py-4">
-              <div>
-                <h2 className="text-xl font-black">好友</h2>
-                <p className="text-sm text-ink/55">添加好友、聊天，也可以让宠物去好友家串门。</p>
-              </div>
-              <button className="btn-soft px-3 py-1.5" type="button" onClick={() => setOpen(false)}>
-                关闭
-              </button>
+        <div className="absolute right-0 top-full z-50 mt-2 flex h-[min(74vh,640px)] w-[min(92vw,390px)] flex-col overflow-hidden rounded-lg border border-ink/10 bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-ink/10 bg-mint/10 px-4 py-3">
+            <div>
+              <h2 className="text-base font-black">好友</h2>
+              <p className="text-xs text-ink/55">聊天和宠物串门</p>
             </div>
-            <div className="grid min-h-0 flex-1 md:grid-cols-[230px_1fr]">
-              <section className="border-b border-ink/10 p-4 md:border-b-0 md:border-r">
-                <form className="flex gap-2" onSubmit={addFriend}>
-                  <input className="field min-w-0" value={newFriend} onChange={(e) => setNewFriend(e.target.value)} placeholder="好友用户名" />
-                  <button className="btn-primary px-3">添加</button>
-                </form>
-                {pendingIncoming.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <div className="text-xs font-black text-ink/50">待确认</div>
-                    {pendingIncoming.map((item) => (
-                      <div key={item.id} className="rounded-lg bg-honey/15 p-2 text-sm">
-                        <div className="font-bold">{item.requester.username}</div>
-                        <button className="mt-2 rounded-lg bg-white px-2 py-1 text-xs font-bold" onClick={() => accept(item.id)}>
-                          接受
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="mt-4 space-y-2">
-                  <div className="text-xs font-black text-ink/50">好友列表</div>
-                  {accepted.length === 0 && <p className="text-sm text-ink/55">还没有好友。</p>}
+            <button className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-ink ring-1 ring-ink/10" type="button" onClick={() => setOpen(false)}>
+              关闭
+            </button>
+          </div>
+
+          <div className="border-b border-ink/10 p-3">
+            <form className="flex gap-2" onSubmit={addFriend}>
+              <input className="field h-10 min-w-0 text-sm" value={newFriend} onChange={(e) => setNewFriend(e.target.value)} placeholder="好友用户名" />
+              <button className="btn-primary h-10 px-3">添加</button>
+            </form>
+            {notice && <p className="mt-2 rounded-lg bg-honey/15 px-3 py-2 text-xs font-semibold">{notice}</p>}
+          </div>
+
+          <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr]">
+            <section className="max-h-40 overflow-y-auto border-b border-ink/10 p-3">
+              {pendingIncoming.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  <div className="text-[11px] font-black text-ink/45">待确认</div>
+                  {pendingIncoming.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between rounded-lg bg-honey/15 px-2 py-2 text-sm">
+                      <span className="font-bold">{item.requester.username}</span>
+                      <button className="rounded-lg bg-white px-2 py-1 text-xs font-bold" onClick={() => accept(item.id)}>
+                        接受
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div>
+                <div className="mb-2 text-[11px] font-black text-ink/45">好友列表</div>
+                {accepted.length === 0 && <p className="text-sm text-ink/55">还没有好友。</p>}
+                <div className="space-y-1">
                   {accepted.map((item) => {
                     const other = item.requesterId === currentUserId ? item.addressee : item.requester;
                     return (
                       <button
                         key={item.id}
-                        className={`w-full rounded-lg px-3 py-2 text-left text-sm font-bold ${selectedId === item.id ? "bg-mint/20" : "bg-ink/5"}`}
+                        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold ${
+                          selectedId === item.id ? "bg-mint/20 text-ink" : "bg-ink/5 text-ink/75"
+                        }`}
                         type="button"
                         onClick={() => setSelectedId(item.id)}
                       >
-                        {other.username}
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs ring-1 ring-ink/10">
+                          {other.username.slice(0, 1).toUpperCase()}
+                        </span>
+                        <span>{other.username}</span>
                       </button>
                     );
                   })}
                 </div>
-              </section>
-              <section className="flex min-h-0 flex-col p-4">
-                {selectedFriend ? (
-                  <>
-                    <div className="mb-3">
-                      <h3 className="text-lg font-black">和 {selectedFriend.username}</h3>
-                      <p className="text-sm text-ink/55">可以聊天，也可以访问 TA 家的宠物。</p>
+              </div>
+            </section>
+
+            <section className="flex min-h-0 flex-col p-3">
+              {selectedFriend ? (
+                <>
+                  <div className="mb-2 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-black">和 {selectedFriend.username}</h3>
+                      <p className="text-xs text-ink/50">聊天，也可以访问 TA 家宠物</p>
                     </div>
-                    <div className="mb-4 rounded-lg bg-mint/10 p-3">
-                      <div className="mb-2 text-sm font-black">访问好友宠物</div>
-                      <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto]">
+                  </div>
+                  <div className="mb-3 rounded-lg bg-mint/10 p-2">
+                    <div className="mb-2 text-xs font-black">访问好友宠物</div>
+                    <div className="grid gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <select className="field" value={ownPetId} onChange={(e) => setOwnPetId(e.target.value)}>
                           <option value="">你的宠物</option>
                           {ownPets.map((pet) => (
-                            <option key={pet.id} value={pet.id}>{pet.name}</option>
+                            <option key={pet.id} value={pet.id}>
+                              {pet.name}
+                            </option>
                           ))}
                         </select>
                         <select className="field" value={targetPetId} onChange={(e) => setTargetPetId(e.target.value)}>
                           <option value="">好友宠物</option>
                           {selectedFriendPets.map((pet) => (
-                            <option key={pet.id} value={pet.id}>{pet.name}</option>
+                            <option key={pet.id} value={pet.id}>
+                              {pet.name}
+                            </option>
                           ))}
                         </select>
-                        <button className="btn-primary" type="button" onClick={visitFriendPet}>
-                          访问
-                        </button>
                       </div>
+                      <button className="btn-primary h-9" type="button" onClick={visitFriendPet}>
+                        访问
+                      </button>
                     </div>
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto rounded-lg bg-ink/5 p-3">
-                      {messages.length === 0 && <p className="text-sm text-ink/55">还没有聊天消息。</p>}
-                      {messages.map((message) => {
-                        const mine = message.senderId === currentUserId;
-                        return (
-                          <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                            <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${mine ? "bg-berry text-white" : "bg-white"}`}>
-                              <div>{message.content}</div>
-                              <div className={`mt-1 text-[10px] ${mine ? "text-white/70" : "text-ink/40"}`}>
-                                {message.sender.username} · {new Date(message.createdAt).toLocaleString()}
-                              </div>
+                  </div>
+                  <div className="min-h-0 flex-1 space-y-2 overflow-y-auto rounded-lg bg-ink/5 p-3">
+                    {messages.length === 0 && <p className="text-sm text-ink/55">还没有聊天消息。</p>}
+                    {messages.map((message) => {
+                      const mine = message.senderId === currentUserId;
+                      return (
+                        <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                          <div className={`max-w-[82%] rounded-lg px-3 py-2 text-sm ${mine ? "bg-berry text-white" : "bg-white"}`}>
+                            <div>{message.content}</div>
+                            <div className={`mt-1 text-[10px] ${mine ? "text-white/70" : "text-ink/40"}`}>
+                              {new Date(message.createdAt).toLocaleTimeString()}
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                    <form className="mt-3 flex gap-2" onSubmit={sendMessage}>
-                      <input className="field" value={content} onChange={(e) => setContent(e.target.value)} placeholder="输入聊天内容" />
-                      <button className="btn-primary whitespace-nowrap">发送</button>
-                    </form>
-                  </>
-                ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-ink/55">选择一个好友开始聊天。</div>
-                )}
-                {notice && <p className="mt-3 rounded-lg bg-honey/15 px-3 py-2 text-sm font-semibold">{notice}</p>}
-              </section>
-            </div>
-          </aside>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <form className="mt-3 flex gap-2" onSubmit={sendMessage}>
+                    <input className="field h-10" value={content} onChange={(e) => setContent(e.target.value)} placeholder="输入聊天内容" />
+                    <button className="btn-primary h-10 whitespace-nowrap px-3">发送</button>
+                  </form>
+                </>
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-ink/55">选择一个好友开始聊天。</div>
+              )}
+            </section>
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
