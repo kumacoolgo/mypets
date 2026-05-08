@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Friendship = {
   id: string;
@@ -24,6 +24,8 @@ export default function FriendDrawer() {
   const [ownPetId, setOwnPetId] = useState("");
   const [targetPetId, setTargetPetId] = useState("");
   const [notice, setNotice] = useState("");
+  const [unreadByFriend, setUnreadByFriend] = useState<Record<string, number>>({});
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const accepted = useMemo(() => friendships.filter((item) => item.status === "accepted"), [friendships]);
   const pendingIncoming = useMemo(
@@ -33,15 +35,28 @@ export default function FriendDrawer() {
   const selected = accepted.find((item) => item.id === selectedId);
   const selectedFriend = selected ? (selected.requesterId === currentUserId ? selected.addressee : selected.requester) : null;
   const selectedFriendPets = selectedFriend ? friendPets.filter((pet) => pet.ownerId === selectedFriend.id) : [];
+  const unreadCount = Object.values(unreadByFriend).reduce((sum, count) => sum + count, 0) + pendingIncoming.length;
+
+  function seenKey(friendshipId: string) {
+    return `mypets_friend_seen_${friendshipId}`;
+  }
+
+  function markSeen(friendshipId: string, list: any[]) {
+    const latest = list.at(-1);
+    if (latest) localStorage.setItem(seenKey(friendshipId), new Date(latest.createdAt).toISOString());
+    setUnreadByFriend((prev) => ({ ...prev, [friendshipId]: 0 }));
+  }
 
   async function load() {
     const [friendsRes, petsRes] = await Promise.all([fetch("/api/friends"), fetch("/api/pets")]);
     const friendData = await friendsRes.json();
     const petData = await petsRes.json();
     if (friendData.ok) {
+      const nextAccepted = friendData.data.friendships.filter((item: Friendship) => item.status === "accepted");
       setCurrentUserId(friendData.data.currentUserId);
       setFriendships(friendData.data.friendships);
       setFriendPets(friendData.data.friendPets);
+      refreshUnreadCounts(nextAccepted, friendData.data.currentUserId);
       if (!selectedId && friendData.data.friendships.length > 0) {
         const firstAccepted = friendData.data.friendships.find((item: Friendship) => item.status === "accepted");
         if (firstAccepted) setSelectedId(firstAccepted.id);
@@ -54,16 +69,63 @@ export default function FriendDrawer() {
     if (!friendshipId) return setMessages([]);
     const res = await fetch(`/api/friends/${friendshipId}/messages`);
     const data = await res.json();
-    setMessages(data.ok ? data.data.messages : []);
+    const list = data.ok ? data.data.messages : [];
+    setMessages(list);
+    if (open && friendshipId === selectedId) markSeen(friendshipId, list);
+  }
+
+  async function refreshUnreadCounts(sourceFriendships = accepted, userId = currentUserId) {
+    if (!userId || sourceFriendships.length === 0) {
+      setUnreadByFriend({});
+      return;
+    }
+    const entries = await Promise.all(
+      sourceFriendships.map(async (friendship) => {
+        const res = await fetch(`/api/friends/${friendship.id}/messages`);
+        const data = await res.json();
+        if (!data.ok) return [friendship.id, 0] as const;
+        const lastSeen = localStorage.getItem(seenKey(friendship.id));
+        const lastSeenTime = lastSeen ? new Date(lastSeen).getTime() : 0;
+        const count =
+          open && friendship.id === selectedId
+            ? 0
+            : data.data.messages.filter((message: any) => message.senderId !== userId && new Date(message.createdAt).getTime() > lastSeenTime).length;
+        return [friendship.id, count] as const;
+      })
+    );
+    setUnreadByFriend(Object.fromEntries(entries));
   }
 
   useEffect(() => {
-    if (open) load();
-  }, [open]);
+    load();
+  }, []);
 
   useEffect(() => {
     if (open && selectedId) loadMessages(selectedId);
   }, [open, selectedId]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const timer = window.setInterval(() => {
+      if (open) loadMessages(selectedId);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [open, selectedId]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      load();
+    }, 6000);
+    return () => window.clearInterval(timer);
+  }, [open, selectedId]);
+
+  useEffect(() => {
+    refreshUnreadCounts();
+  }, [friendships, currentUserId, selectedId, open]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages.length]);
 
   async function addFriend(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -119,8 +181,13 @@ export default function FriendDrawer() {
 
   return (
     <div className="relative">
-      <button className="btn-soft px-3 py-1.5" type="button" onClick={() => setOpen(true)}>
+      <button className="btn-soft relative px-3 py-1.5" type="button" onClick={() => setOpen(true)}>
         好友
+        {unreadCount > 0 && (
+          <span className="absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-berry px-1 text-[11px] font-black text-white shadow-md">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
       </button>
       {open && (
         <div className="fixed right-4 top-20 z-[10001] flex h-[min(74vh,640px)] w-[min(92vw,390px)] flex-col overflow-hidden rounded-lg border border-ink/10 bg-white shadow-2xl md:right-[calc((100vw-72rem)/2+1rem)]">
@@ -176,6 +243,9 @@ export default function FriendDrawer() {
                           {other.username.slice(0, 1).toUpperCase()}
                         </span>
                         <span>{other.username}</span>
+                        {(unreadByFriend[item.id] ?? 0) > 0 && (
+                          <span className="ml-auto rounded-full bg-berry px-2 py-0.5 text-[10px] font-black text-white">{unreadByFriend[item.id]}</span>
+                        )}
                       </button>
                     );
                   })}
@@ -233,6 +303,7 @@ export default function FriendDrawer() {
                         </div>
                       );
                     })}
+                    <div ref={messagesEndRef} />
                   </div>
                   <form className="mt-3 flex gap-2" onSubmit={sendMessage}>
                     <input className="field h-10" value={content} onChange={(e) => setContent(e.target.value)} placeholder="输入聊天内容" />
