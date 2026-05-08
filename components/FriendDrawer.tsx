@@ -123,7 +123,7 @@ export default function FriendDrawer() {
         好友
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 flex h-[min(74vh,640px)] w-[min(92vw,390px)] flex-col overflow-hidden rounded-lg border border-ink/10 bg-white shadow-2xl">
+        <div className="fixed right-4 top-20 z-[9999] flex h-[min(74vh,640px)] w-[min(92vw,390px)] flex-col overflow-hidden rounded-lg border border-ink/10 bg-white shadow-2xl md:right-[calc((100vw-72rem)/2+1rem)]">
           <div className="flex items-center justify-between border-b border-ink/10 bg-mint/10 px-4 py-3">
             <div>
               <h2 className="text-base font-black">好友</h2>
