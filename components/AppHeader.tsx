@@ -7,7 +7,7 @@ export default async function AppHeader() {
   const user = await getCurrentUser();
   const appName = process.env.NEXT_PUBLIC_APP_NAME || "MyPets";
   return (
-    <header className="border-b border-white/70 bg-white/70 backdrop-blur">
+    <header className="relative z-[10000] border-b border-white/70 bg-white/70 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href="/" className="text-xl font-black text-ink">
           {appName}
