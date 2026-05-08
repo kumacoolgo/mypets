@@ -65,6 +65,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         result: JSON.stringify(result)
       }
     });
+    await prisma.friendMessage.create({
+      data: {
+        friendshipId: friendship.id,
+        senderId: user.id,
+        content: `串门提醒：${user.username} 的 ${pet.name} 来你家找 ${targetPet.name} 玩了一会儿。${pet.name} 心情变好了，还获得了 12 EXP。`
+      }
+    });
     return ok({ pet: updated, result });
   } catch (error) {
     return handleAuthError(error);
